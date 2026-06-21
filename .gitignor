@@ -1,0 +1,53 @@
+# ---------------------------------------------------------------------
+# 1. Environment Variables & Secrets (CRITICAL for Security)
+# ---------------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ---------------------------------------------------------------------
+# 2. Package Manager Dependencies (Never commit these)
+# ---------------------------------------------------------------------
+node_modules/
+bower_components/
+jspm_packages/
+.pnp/
+.pnp.js
+
+# ---------------------------------------------------------------------
+# 3. Build Outputs, Compiles, and Caching
+# ---------------------------------------------------------------------
+dist/
+build/
+out/
+.next/
+.nuxt/
+*.log
+*.pids
+*.pid
+*.seed
+*.pid.lock
+
+# ---------------------------------------------------------------------
+# 4. Operating System Junk (System-specific files)
+# ---------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ---------------------------------------------------------------------
+# 5. IDE / Code Editors (Optional but recommended for teams)
+# ---------------------------------------------------------------------
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
