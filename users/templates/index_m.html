@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PACL Customer List</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/2.3.2/css/dataTables.bootstrap5.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+    <style>
+        :root {
+            --blue-50:  #E6F1FB; --blue-100: #B5D4F4;
+            --blue-600: #185FA5; --blue-800: #0C447C;
+            --green-50: #EAF3DE; --green-800: #27500A; --green-600: #3B6D11;
+            --amber-50: #FAEEDA; --amber-800: #633806; --amber-600: #854F0B;
+            --red-50:   #FCEBEB; --red-800:  #791F1F; --red-600:  #A32D2D;
+            --surf:  #ffffff;
+            --surf2: #f7f7f5;
+            --bg:    #f0efe9;
+            --bdr:   rgba(0,0,0,.1);
+            --bdr2:  rgba(0,0,0,.18);
+            --tx:    #1a1a18;
+            --tx2:   #6b6b67;
+            --r-md:  8px;
+            --r-lg:  12px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            font-size: 15px;
+            color: var(--tx);
+            min-height: 100vh;
+            padding: 1.25rem 1rem;
+        }
+
+        /* ── Page header ── */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            gap: .75rem;
+        }
+        .page-header h1 { font-size: 20px; font-weight: 500; margin: 0 0 3px; }
+        .page-header p  { font-size: 13px; color: var(--tx2); margin: 0; }
+
+        .btn-next {
+            display: inline-flex; align-items: center; gap: 7px;
+            font-size: 14px; font-weight: 500;
+            padding: 9px 20px;
+            border-radius: var(--r-md);
+            background: var(--blue-600); color: #fff; border: none;
+            text-decoration: none; cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-next:hover { background: var(--blue-800); color: #fff; }
+
+        /* ── Main card ── */
+        .main-card {
+            background: var(--surf);
+            border: 0.5px solid var(--bdr);
+            border-radius: var(--r-lg);
+            overflow: hidden;
+        }
+
+        /* ── Toolbar ── */
+        .toolbar {
+            display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+            padding: .85rem 1rem;
+            border-bottom: 0.5px solid var(--bdr);
+        }
+        .toolbar input[type="text"] {
+            flex: 1; min-width: 160px;
+            font-size: 14px; padding: 8px 12px;
+            border: 0.5px solid var(--bdr2);
+            border-radius: var(--r-md);
+            background: var(--surf2); color: var(--tx);
+            height: 38px; outline: none;
+        }
+        .toolbar input[type="text"]:focus { border-color: var(--blue-600); }
+
+        .toolbar select {
+            font-size: 14px; padding: 8px 10px;
+            border: 0.5px solid var(--bdr2);
+            border-radius: var(--r-md);
+            background: var(--surf2); color: var(--tx);
+            height: 38px; outline: none; cursor: pointer;
+        }
+        .toolbar select:focus { border-color: var(--blue-600); }
+
+        .btn-reset {
+            font-size: 14px; padding: 8px 14px;
+            border: 0.5px solid var(--bdr2);
+            border-radius: var(--r-md);
+            background: transparent; color: var(--tx2);
+            height: 38px; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px;
+            white-space: nowrap;
+        }
+        .btn-reset:hover { background: var(--surf2); color: var(--tx); }
+
+        /* ── Desktop Table ── */
+        #customerTable {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        #customerTable thead tr {
+            background: var(--surf2);
+            border-bottom: 0.5px solid var(--bdr);
+        }
+        #customerTable thead th {
+            padding: 11px 14px;
+            font-weight: 500; font-size: 13px; color: var(--tx2);
+            text-align: left; white-space: nowrap; border: none;
+        }
+        #customerTable tbody tr {
+            border-bottom: 0.5px solid var(--bdr);
+            transition: background .1s;
+        }
+        #customerTable tbody tr:last-child { border-bottom: none; }
+        #customerTable tbody tr:hover { background: #f9f9f7; }
+        #customerTable td { padding: 12px 14px; vertical-align: middle; border: none; }
+
+        .sr-num { color: var(--tx2); font-size: 13px; font-weight: 500; }
+
+        .avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--blue-50); color: var(--blue-800);
+            font-size: 11px; font-weight: 500;
+            display: inline-flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .name-row { display: flex; align-items: center; gap: 9px; }
+        .name-text { font-weight: 500; font-size: 14px; }
+        .cert-text { font-size: 13px; color: var(--tx2); font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; }
+
+        /* Status pills */
+        .pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 12px; font-weight: 500;
+            padding: 4px 10px; border-radius: 20px;
+        }
+        .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+        .pill-yes  { background: var(--green-50); color: var(--green-800); }
+        .dot-yes   { background: var(--green-600); }
+        .pill-no   { background: var(--red-50);   color: var(--red-800);   }
+        .dot-no    { background: var(--red-600);   }
+        .pill-done { background: var(--blue-50);  color: var(--blue-800);  }
+        .dot-done  { background: var(--blue-600);  }
+        .pill-pend { background: var(--amber-50); color: var(--amber-800); }
+        .dot-pend  { background: var(--amber-600); }
+
+        /* Action buttons */
+        .action-wrap { display: flex; gap: 6px; }
+        .btn-act {
+            font-size: 12px; padding: 5px 10px; height: 30px;
+            border: 0.5px solid var(--bdr2);
+            border-radius: var(--r-md);
+            background: transparent; color: var(--tx);
+            cursor: pointer;
+            display: inline-flex; align-items: center; gap: 4px;
+            transition: background .1s;
+            white-space: nowrap;
+        }
+        .btn-act:hover { background: var(--surf2); }
+        .btn-view { color: var(--blue-600); border-color: var(--blue-100); }
+        .btn-view:hover { background: var(--blue-50); }
+
+        /* DataTables overrides */
+        .dataTables_wrapper .dataTables_filter { display: none !important; }
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_paginate {
+            padding: .8rem 1rem !important;
+            font-size: 13px !important;
+            color: var(--tx2) !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 4px 9px !important;
+            border-radius: var(--r-md) !important;
+            border: 0.5px solid var(--bdr) !important;
+            font-size: 13px !important;
+            margin: 0 2px !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background: var(--blue-600) !important;
+            color: #fff !important;
+            border-color: var(--blue-600) !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current) {
+            background: var(--surf2) !important;
+            color: var(--tx) !important;
+        }
+        .dataTables_wrapper .row { margin: 0; }
+
+        /* Empty state */
+        .empty-cell { padding: 3rem 1rem !important; text-align: center; color: var(--tx2); }
+        .empty-cell i { font-size: 30px; display: block; margin-bottom: .5rem; opacity: .35; }
+
+        /* ── MOBILE CARDS (hidden on desktop) ── */
+        .mobile-list { display: none; }
+
+        .mobile-card {
+            padding: 14px 1rem;
+            border-bottom: 0.5px solid var(--bdr);
+        }
+        .mobile-card:last-child { border-bottom: none; }
+
+        .mobile-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .mobile-card-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+        .mobile-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: var(--blue-50); color: var(--blue-800);
+            font-size: 12px; font-weight: 500;
+            display: inline-flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .mobile-name {
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .mobile-sr {
+            font-size: 12px;
+            color: var(--tx2);
+            margin-top: 1px;
+        }
+        .mobile-pills {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .mobile-cert {
+            font-size: 12px;
+            color: var(--tx2);
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            margin-bottom: 10px;
+        }
+        .mobile-cert-label {
+            font-size: 11px;
+            color: var(--tx2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .mobile-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .mobile-actions .btn-act {
+            flex: 1;
+            justify-content: center;
+            height: 34px;
+            font-size: 13px;
+        }
+
+        /* Mobile-only pagination adjustments */
+        @media (max-width: 600px) {
+            .dataTables_wrapper .dataTables_length,
+            .dataTables_wrapper .dataTables_info,
+            .dataTables_wrapper .dataTables_paginate {
+                text-align: center !important;
+                padding: .65rem .75rem !important;
+            }
+            .dataTables_wrapper .dataTables_paginate {
+                display: flex !important;
+                justify-content: center !important;
+                flex-wrap: wrap !important;
+                gap: 2px !important;
+            }
+        }
+
+        /* ── Responsive breakpoints ── */
+        @media (max-width: 767px) {
+            body { padding: 1rem .75rem; }
+
+            .page-header h1 { font-size: 18px; }
+
+            .btn-next { padding: 8px 14px; font-size: 13px; }
+
+            /* Hide desktop table, show mobile cards */
+            .desktop-table-wrap { display: none !important; }
+            .mobile-list { display: block; }
+
+            /* Toolbar: stack to two rows */
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+                padding: .75rem;
+            }
+            .toolbar input[type="text"] {
+                width: 100%;
+                min-width: unset;
+            }
+            .toolbar-row2 {
+                display: flex;
+                gap: 8px;
+            }
+            .toolbar select {
+                flex: 1;
+                min-width: 0;
+            }
+            .btn-reset {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .toolbar-row2 { display: contents; }
+        }
+
+        /* ── Modals ── */
+        .modal-content {
+            border: 0.5px solid var(--bdr) !important;
+            border-radius: var(--r-lg) !important;
+            overflow: hidden;
+            box-shadow: none !important;
+        }
+        .modal-header {
+            background: var(--surf2);
+            border-bottom: 0.5px solid var(--bdr) !important;
+            padding: .9rem 1.1rem;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .modal-title { font-size: 15px !important; font-weight: 500 !important; display: flex; align-items: center; gap: 8px; }
+        .modal-body   { padding: 1.1rem; font-size: 14px; }
+        .modal-footer { border-top: 0.5px solid var(--bdr) !important; padding: .8rem 1.1rem !important; }
+
+        .form-label  { font-size: 13px; color: var(--tx2); margin-bottom: 6px; }
+        .form-select, .form-control {
+            font-size: 14px !important;
+            border: 0.5px solid var(--bdr2) !important;
+            border-radius: var(--r-md) !important;
+            background: var(--surf2) !important;
+            color: var(--tx) !important;
+            height: 40px !important;
+        }
+        .form-select:focus, .form-control:focus {
+            border-color: var(--blue-600) !important;
+            box-shadow: none !important;
+        }
+
+        .btn-modal-cancel {
+            font-size: 14px; padding: 7px 16px;
+            border: 0.5px solid var(--bdr2);
+            border-radius: var(--r-md);
+            background: transparent; color: var(--tx2);
+            cursor: pointer; height: 38px;
+        }
+        .btn-modal-cancel:hover { background: var(--surf2); color: var(--tx); }
+        .btn-modal-save {
+            font-size: 14px; padding: 7px 20px;
+            border-radius: var(--r-md);
+            background: var(--blue-600); color: #fff;
+            border: none; cursor: pointer; height: 38px;
+        }
+        .btn-modal-save:hover { background: var(--blue-800); }
+
+        /* View modal docs */
+        #ackImage, #bankImage {
+            width: 100%;
+            border: 0.5px solid var(--bdr);
+            border-radius: var(--r-md);
+            min-height: 80px;
+            background: var(--surf2);
+        }
+        .doc-label { font-size: 13px; color: var(--tx2); margin-bottom: .4rem; }
+        .doc-name-wrap { margin-bottom: .6rem; }
+
+        /* Modal full-screen on small screens */
+        @media (max-width: 575px) {
+            .modal-dialog {
+                margin: .5rem !important;
+            }
+            .modal-xl { max-width: calc(100vw - 1rem) !important; }
+            .modal-body .row.g-4 { --bs-gutter-y: 1.25rem; }
+        }
+    </style>
+</head>
+
+<body>
+<div style="max-width: 1140px; margin: 0 auto;">
+
+    <!-- Page header -->
+    <div class="page-header">
+        <div>
+            <h1>PACL customer list</h1>
+            <p>Track and manage all customer records</p>
+        </div>
+        <a href="{% url 'index' %}" class="btn-next">
+            <i class="ti ti-arrow-left" style="font-size:15px"></i> Go Back
+        </a>
+    </div>
+
+    <!-- Main table card -->
+    <div class="main-card">
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <input type="text" id="nameFilter" placeholder="Search name or certificate…">
+            <div class="toolbar-row2">
+                <select id="editableFilter">
+                    <option value="">All editable</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+                <select id="completedFilter">
+                    <option value="">All status</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Pending">Pending</option>
+                </select>
+            </div>
+            <button id="resetFilters" class="btn-reset">
+                <i class="ti ti-refresh" style="font-size:14px"></i> Reset
+            </button>
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="desktop-table-wrap table-responsive">
+            <table id="customerTable" aria-label="Customer records">
+                <thead>
+                    <tr>
+                        <th style="width:60px">Sr no.</th>
+                        <th>Name</th>
+                        <th>Certificate no.</th>
+                        <th style="width:105px">Editable</th>
+                        <th style="width:125px">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for user in users %}
+                <tr>
+                    <td class="sr-num">{{ user.sr_no }}</td>
+                    <td>
+                        <div class="name-row">
+                            <div class="avatar">{{ user.name|slice:":2"|upper }}</div>
+                            <span class="name-text">{{ user.name }}</span>
+                        </div>
+                    </td>
+                    <td class="cert-text">{{ user.certificate_no }}</td>
+                    <td>
+                        {% if user.is_editable == 1 %}
+                            <span class="pill pill-yes"><span class="dot dot-yes"></span>Yes</span>
+                        {% else %}
+                            <span class="pill pill-no"><span class="dot dot-no"></span>No</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.is_completed == 1 %}
+                            <span class="pill pill-done"><span class="dot dot-done"></span>Completed</span>
+                        {% else %}
+                            <span class="pill pill-pend"><span class="dot dot-pend"></span>Pending</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="empty-cell">
+                        <i class="ti ti-users-group"></i>
+                        No customer records found
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Card List (rendered by JS from DataTable data) -->
+        <div class="mobile-list" id="mobileList">
+            <!-- Cards injected by JS -->
+        </div>
+        <!-- Mobile pagination controls -->
+        <div id="mobilePagination" style="display:none; padding:.75rem 1rem; border-top:0.5px solid var(--bdr);">
+            <div id="mobilePaginationInner" style="display:flex; flex-wrap:wrap; gap:5px; justify-content:center;"></div>
+            <div id="mobileInfo" style="text-align:center; font-size:12px; color:var(--tx2); margin-top:6px;"></div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.2/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/2.3.2/js/dataTables.bootstrap5.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+$(document).ready(function () {
+
+    const table = $('#customerTable').DataTable({
+        pageLength: 10,
+        lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
+        order: [[0, 'asc']],
+        language: {
+            search: "",
+            lengthMenu: "Show _MENU_ records",
+            info: "Showing _START_ to _END_ of _TOTAL_ records",
+            infoEmpty: "No records available",
+            paginate: { previous: "←", next: "→" }
+        }
+    });
+
+    $('#nameFilter').on('keyup', function () {
+        table.search(this.value).draw();
+        renderMobileCards();
+    });
+
+    $('#editableFilter').on('change', function () {
+        table.column(3).search(this.value).draw();
+        renderMobileCards();
+    });
+
+    $('#completedFilter').on('change', function () {
+        table.column(4).search(this.value).draw();
+        renderMobileCards();
+    });
+
+    $('#resetFilters').on('click', function () {
+        $('#nameFilter').val('');
+        $('#editableFilter').val('');
+        $('#completedFilter').val('');
+        table.search('').columns().search('').draw();
+        renderMobileCards();
+    });
+
+    // ── Mobile card renderer ──
+    // Reads from the DataTable's current page data and renders cards
+    let mobilePage = 0;
+    const mobilePageSize = 10;
+
+    function renderMobileCards() {
+        if (window.innerWidth > 767) return;
+
+        const filteredData = table.rows({ search: 'applied' }).data().toArray();
+        const totalRows = filteredData.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / mobilePageSize));
+
+        if (mobilePage >= totalPages) mobilePage = 0;
+
+        const start = mobilePage * mobilePageSize;
+        const end   = Math.min(start + mobilePageSize, totalRows);
+        const pageData = filteredData.slice(start, end);
+
+        const list = document.getElementById('mobileList');
+        list.innerHTML = '';
+
+        if (pageData.length === 0) {
+            list.innerHTML = `
+                <div class="empty-cell" style="padding:2.5rem 1rem; text-align:center; color:var(--tx2);">
+                    <i class="ti ti-users-group" style="font-size:28px;display:block;margin-bottom:.5rem;opacity:.35;"></i>
+                    No customer records found
+                </div>`;
+            document.getElementById('mobilePagination').style.display = 'none';
+            return;
+        }
+
+        pageData.forEach(function(rowData) {
+            // Extract cells from the rendered row HTML
+            const tmp = document.createElement('div');
+            tmp.innerHTML = rowData[1]; // name cell HTML
+            const nameText = tmp.querySelector('.name-text')?.textContent?.trim() || '';
+            const avatarText = tmp.querySelector('.avatar')?.textContent?.trim() || '';
+
+            const certTmp = document.createElement('div');
+            certTmp.innerHTML = rowData[2]; // cert cell
+            const certText = certTmp.textContent?.trim() || rowData[2];
+
+            const editTmp = document.createElement('div');
+            editTmp.innerHTML = rowData[3]; // editable pill
+            const editPillHTML = editTmp.querySelector('.pill')?.outerHTML || rowData[3];
+            const editableVal = editTmp.textContent?.trim().includes('Yes') ? '1' : '0';
+
+            const statusTmp = document.createElement('div');
+            statusTmp.innerHTML = rowData[4]; // status pill
+            const statusPillHTML = statusTmp.querySelector('.pill')?.outerHTML || rowData[4];
+
+            const actTmp = document.createElement('div');
+            actTmp.innerHTML = rowData[5]; // actions
+            const viewBtn  = actTmp.querySelector('.view-btn');
+            const editBtn  = actTmp.querySelector('.edit-btn');
+
+            const viewUrl     = viewBtn  ? viewBtn.dataset.url       : '';
+            const editId      = editBtn  ? editBtn.dataset.id        : '';
+            const editComp    = editBtn  ? editBtn.dataset.completed : '0';
+            const editEditable= editBtn  ? editBtn.dataset.editable  : '0';
+            const srNo        = rowData[0];
+
+            const card = document.createElement('div');
+            card.className = 'mobile-card';
+            card.innerHTML = `
+                <div class="mobile-card-top">
+                    <div class="mobile-card-left">
+                        <div class="mobile-avatar">${avatarText}</div>
+                        <div style="min-width:0;">
+                            <div class="mobile-name">${nameText}</div>
+                            <div class="mobile-sr">#${srNo}</div>
+                        </div>
+                    </div>
+                    <div class="mobile-pills">
+                        ${editPillHTML}
+                        ${statusPillHTML}
+                    </div>
+                </div>
+                <div class="mobile-cert">
+                    <div class="mobile-cert-label">Certificate</div>
+                    ${certText}
+                </div>
+                <div class="mobile-actions">
+                    <button class="btn-act btn-view view-btn"
+                            data-url="${viewUrl}"
+                            aria-label="View ${nameText}">
+                        <i class="ti ti-eye" style="font-size:14px"></i> View
+                    </button>
+                    <button class="btn-act edit-btn"
+                            data-id="${editId}"
+                            data-editable="${editEditable}"
+                            data-completed="${editComp}"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editModal"
+                            aria-label="Edit ${nameText}">
+                        <i class="ti ti-edit" style="font-size:14px"></i> Edit
+                    </button>
+                </div>
+            `;
+            list.appendChild(card);
+        });
+
+        // Pagination
+        const pag = document.getElementById('mobilePagination');
+        const pagInner = document.getElementById('mobilePaginationInner');
+        const info = document.getElementById('mobileInfo');
+
+        pag.style.display = totalPages > 1 ? 'block' : 'none';
+        info.textContent = `${start + 1}–${end} of ${totalRows}`;
+        pagInner.innerHTML = '';
+
+        const makeBtn = (label, page, disabled, active) => {
+            const b = document.createElement('button');
+            b.textContent = label;
+            b.disabled = disabled;
+            b.style.cssText = `
+                font-size:13px; padding:4px 10px; border-radius:var(--r-md);
+                border:0.5px solid ${active ? 'var(--blue-600)' : 'var(--bdr)'};
+                background:${active ? 'var(--blue-600)' : 'transparent'};
+                color:${active ? '#fff' : 'var(--tx2)'};
+                cursor:${disabled ? 'default' : 'pointer'};
+                opacity:${disabled ? '.4' : '1'};
+            `;
+            if (!disabled && !active) {
+                b.addEventListener('click', () => { mobilePage = page; renderMobileCards(); });
+            }
+            return b;
+        };
+
+        pagInner.appendChild(makeBtn('←', mobilePage - 1, mobilePage === 0, false));
+
+        const maxPages = Math.min(totalPages, 7);
+        let startPage = Math.max(0, mobilePage - 3);
+        let endPage = Math.min(totalPages - 1, startPage + maxPages - 1);
+        if (endPage - startPage < maxPages - 1) startPage = Math.max(0, endPage - maxPages + 1);
+
+        for (let i = startPage; i <= endPage; i++) {
+            pagInner.appendChild(makeBtn(i + 1, i, false, i === mobilePage));
+        }
+
+        pagInner.appendChild(makeBtn('→', mobilePage + 1, mobilePage >= totalPages - 1, false));
+    }
+
+    // Re-render cards on DataTable draw
+    table.on('draw', function () {
+        mobilePage = 0;
+        renderMobileCards();
+    });
+
+    // Initial render
+    renderMobileCards();
+
+    // Re-render on resize between breakpoints
+    let lastMobile = window.innerWidth <= 767;
+    window.addEventListener('resize', function () {
+        const isMobile = window.innerWidth <= 767;
+        if (isMobile !== lastMobile) {
+            lastMobile = isMobile;
+            renderMobileCards();
+        }
+    });
+
+});
+
+</script>
+
+</body>
+</html>
